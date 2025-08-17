@@ -1,0 +1,113 @@
+import type { JSXConvertersFunction } from '@payloadcms/richtext-lexical';
+import type {
+  DefaultNodeTypes,
+  SerializedBlockNode,
+} from '@payloadcms/richtext-lexical';
+import React from 'react';
+
+type MyColorBlock = { color: string };
+type CustomParagraph = { tag: string; style?: string };
+
+// Étendre NodeTypes pour tous les types présents dans ton JSON
+type NodeTypes =
+  | DefaultNodeTypes
+  | SerializedBlockNode<MyColorBlock>
+  | SerializedBlockNode<CustomParagraph>
+  | { type: 'table' }
+  | { type: 'tablerow' }
+  | { type: 'tablecell'; headerState?: number }
+  | { type: 'custom-paragraph'; tag: string; style?: string };
+
+export const jsxConverters: JSXConvertersFunction<NodeTypes> = ({ defaultConverters }) => ({
+  ...defaultConverters,
+
+  blocks: {
+    ...defaultConverters.blocks,
+
+    paragraph: ({ children }) => <p>{children}</p>,
+
+    heading: ({ node, children }) => {
+      const Tag = `h${node.fields.level || 1}` as keyof JSX.IntrinsicElements;
+      return <Tag>{children}</Tag>;
+    },
+
+    quote: ({ children }) => <blockquote>{children}</blockquote>,
+
+    list: ({ node, children }) =>
+      node.fields.type === 'ol' ? <ol>{children}</ol> : <ul>{children}</ul>,
+
+    listItem: ({ children }) => <li>{children}</li>,
+
+    upload: ({ node }) =>
+      node.fields.url ? (
+        <img src={node.fields.url} alt={node.fields.alt || ''} />
+      ) : null,
+
+    myColorBlock: ({ node, children }) => (
+      <div style={{ color: node.fields.color || 'black' }}>{children}</div>
+    ),
+
+    customParagraph: ({ node, children }) => {
+      const Tag = (node.fields?.tag || 'p') as keyof JSX.IntrinsicElements;
+      const style = parseStyle(node.fields?.style || '');
+      return <Tag style={style}>{children}</Tag>;
+    },
+
+    // Gestion complète des tableaux
+    table: ({ children }) => <table>{children}</table>,
+
+    tablerow: ({ children }) => <tr>{children}</tr>,
+
+    tablecell: ({ node, children }) => {
+      // headerState: 1, 2, 3 indiquent une cellule en <th> sinon <td>
+      const isHeader = [1, 2, 3].includes(node.fields?.headerState || 0);
+      const Tag = isHeader ? 'th' : 'td';
+
+      // On peut aussi gérer style d'arrière-plan s'il y en a (backgroundColor)
+      const style: React.CSSProperties = {};
+      if (node.fields?.backgroundColor) {
+        style.backgroundColor = node.fields.backgroundColor;
+      }
+
+      // Colspan et Rowspan si présents
+      const colSpan = node.fields?.colSpan || 1;
+      const rowSpan = node.fields?.rowSpan || 1;
+
+      return (
+        <Tag style={style} colSpan={colSpan} rowSpan={rowSpan}>
+          {children}
+        </Tag>
+      );
+    },
+  },
+
+  inlines: {
+    ...defaultConverters.inlines,
+
+    link: ({ node, children }) => {
+      const { url, newTab } = node.fields;
+      return (
+        <a
+          href={url}
+          target={newTab ? '_blank' : undefined}
+          rel={newTab ? 'noopener noreferrer' : undefined}
+        >
+          {children}
+        </a>
+      );
+    },
+  },
+});
+
+function parseStyle(style: string): React.CSSProperties {
+  return style
+    .split(';')
+    .filter(Boolean)
+    .reduce((acc: any, rule) => {
+      const [prop, value] = rule.split(':');
+      if (prop && value) {
+        acc[prop.trim()] = value.trim();
+      }
+      return acc;
+    }, {});
+}

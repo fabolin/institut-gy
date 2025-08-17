@@ -18,18 +18,27 @@
     "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts"
   },
   "dependencies": {
+    "@atelier-disko/payload-lexical-react-renderer": "^1.2.0",
+    "@lexical/table": "0.28.0",
+    "@nhayhoc/payloadcms-lexical-ext": "^0.5.5",
+    "@payloadcms/db-postgres": "3.50.0",
     "@payloadcms/next": "3.50.0",
     "@payloadcms/payload-cloud": "3.50.0",
     "@payloadcms/richtext-lexical": "3.50.0",
+    "@payloadcms/translations": "^3.50.0",
     "@payloadcms/ui": "3.50.0",
+    "@zapal/payload-lexical-react": "^1.8.0",
     "cross-env": "^7.0.3",
     "dotenv": "16.4.7",
     "graphql": "^16.8.1",
-    "next": "15.4.4",
+    "next": "^15.4.6",
     "payload": "3.50.0",
+    "payloadcms-lexical-ext": "^0.5.3",
+    "prismjs": "^1.30.0",
     "react": "19.1.0",
+    "react-dom": "19.1.0",
     "sharp": "0.34.2",
-    "@payloadcms/db-postgres": "3.50.0"
+    "tailwindcss": "^4.1.11"
   },
   "devDependencies": {
     "@playwright/test": "1.54.1",
